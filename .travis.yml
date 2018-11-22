@@ -1,0 +1,32 @@
+language: node_js
+
+node_js:
+- "8.12.0"
+- "10.13.0"
+- "11.2.0"
+
+cache:
+  directories:
+  - node_modules
+
+before_script:
+- npm install
+- npm run build
+
+script:
+- npm run test
+- npm run coverage
+
+after_success:
+- npm pack
+
+deploy:
+- provider: pages
+  skip_cleanup: true
+  local_dir: docs/
+  github_token: $GITHUB_TOKEN
+  on:
+    tags: true
+- provider: script
+  skip_cleanup: true
+  script: npx travis-deploy-once "npx semantic-release"

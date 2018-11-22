@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "lib": ["es2018"],
+    "target": "es6",
+    "downlevelIteration": true,
+    "module": "commonjs",
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "declaration": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noImplicitAny": true
+  },
+  "include": ["src"]
+}
