@@ -99,20 +99,26 @@ export class Serialism {
       return result;
     }
 
-    let encoded: any = Object.assign({}, value);
+    let encoded: any;
     const type = this.classes.find(t => value.constructor === t);
     if (type) {
-      encoded = ['@serialism:type', type.name, Object.entries(value)];
-    }
-    known.set(value, encoded);
-    for (const [key, val] of Object.entries(encoded)) {
-      encoded[key] = this.entomb(val, known);
-    }
+      encoded = ['@serialism:type', type.name, null];
+      known.set(value, encoded);
+      encoded[2] = Object.entries(value).map(
+        ([key, val]) => [key, this.entomb(val, known)]
+      );
+    } else {
+      encoded = Object.assign({}, value);
+      known.set(value, encoded);
+      for (const [key, val] of Object.entries(encoded)) {
+        encoded[key] = this.entomb(val, known);
+      }
 
-    for (const sym of Object.getOwnPropertySymbols(value)) {
-      const key = Symbol.keyFor(sym);
-      if (key) {
-        encoded[`@serialism:sym:${key}`] = this.entomb(value[sym], known);
+      for (const sym of Object.getOwnPropertySymbols(value)) {
+        const key = Symbol.keyFor(sym);
+        if (key) {
+          encoded[`@serialism:sym:${key}`] = this.entomb(value[sym], known);
+        }
       }
     }
 
