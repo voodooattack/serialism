@@ -65,4 +65,17 @@ export class TestNative {
     assert.isNotEmpty(result);
     assert.deepStrictEqual(target, result);
   }
+
+  @test
+  'memory leaks'() {
+    gc();
+    const memBefore = process.memoryUsage();
+    for (let i = 0; i < 1024; i++) {
+      const buffer = serializeNative(new ArrayBuffer(1024));
+      assert.isAbove(buffer.byteLength, 1024);
+    }
+    gc();
+    const memAfter = process.memoryUsage();
+    assert.isAtMost(memAfter.external - memBefore.external, 1024);
+  }
 }
