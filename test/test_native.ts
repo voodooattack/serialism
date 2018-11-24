@@ -76,6 +76,6 @@ export class TestNative {
     }
     gc();
     const memAfter = process.memoryUsage();
-    assert.isAtMost(memAfter.external - memBefore.external, 1024);
+    assert.isAtMost(memAfter.external - memBefore.external, 1024 * 1024 * 5, 'possible memory leak detected');
   }
 }

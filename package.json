@@ -29,7 +29,7 @@
     "prepublish": "npm run build && npm run typedoc && npm run test",
     "typedoc": "typedoc --out docs --target es6 --theme minimal --mode file src",
     "lint": "tslint -c tslint.json --project .",
-    "pretest": "npm run clean && npm run lint && npm run debug-build",
+    "pretest": "npm run clean && npm run lint && npm run build",
     "test": "nyc mocha --expose-gc --ui mocha-typescript test/test_**.ts",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "watch": "mocha-typescript-watch",
