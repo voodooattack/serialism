@@ -38,7 +38,7 @@
     "install": "node-gyp configure rebuild",
     "build": "tsc && node-gyp configure rebuild",
     "debug-build": "tsc && node-gyp --debug configure rebuild",
-    "commit": "npm run lint && npm run test && git-cz",
+    "commit": "npm run lint && npm run test && npx git-cz",
     "semantic-release": "semantic-release"
   },
   "keywords": [
