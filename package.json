@@ -1,6 +1,6 @@
 {
   "name": "serialism",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Serialize complex JavaScript objects or ES6 classes with circular dependencies natively.",
   "main": "dist/serialism.js",
   "types": "dist/serialism.d.ts",
