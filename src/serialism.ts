@@ -6,6 +6,7 @@ export { serializeNative, deserializeNative };
  * Interface representing a constructor.
  */
 export interface IConstructor<T = any> {
+  prototype: T;
   new (...args: any[]): T;
 }
 
