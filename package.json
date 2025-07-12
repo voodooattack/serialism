@@ -29,7 +29,7 @@
   },
   "scripts": {
     "clean": "rimraf dist/ build/",
-    "typedoc": "typedoc --out docs --theme default src/serialism.ts --excludeExternals --excludeNotDocumented --excludePrivate --excludeProtected --name serialism --readme README.md --tsconfig tsconfig.json",
+    "typedoc": "typedoc --out docs --theme default src/*.ts --excludeExternals --excludeNotDocumented --excludePrivate --excludeProtected --name serialism --readme README.md --tsconfig tsconfig.json",
     "prepublishOnly": "npm run rebuild && npm run typedoc && npm run test",
     "lint": "tslint -c tslint.json --project .",
     "pretest": "npm run build",
