@@ -16,7 +16,7 @@ If you plan to use this over a wire, please bear that in mind.
 
 ## Compatibility
 
-- node.js >= v8.13.0 (LTS/Carbon)
+- node.js >= v20.19.3 (LTS/Jod)
 
 ## Installation
 
@@ -54,7 +54,54 @@ You need `g++`, `make` and `python` installed.
 
 Use `npm install serialism` to install the npm package.
 
-### TypeScript
+### Simple Example
+
+#### Raw interface (no class deserialization)
+
+This allows you to serialize and deserialize any JavaScript value, without the revival of classes and the processing of global symbols.
+
+This interface is much faster because it will not traverse the object graph in JavaScript to entomb and revive values.
+
+In this case, any class instances supplied will be serialized as plain objects.
+
+```typescript
+import { assert } from 'chai';
+import { Serialism } from 'serialism';
+import { Class1 } from '...';
+
+const serialism = new Serialism();
+const target: any = {
+  undef: undefined,
+  nullVal: null,
+  negativeZero: -0,
+  test: 'hello world',
+  array: [1, 2, 3, 'test', Math.PI, new Date()],
+  map: new Map<any, any>([['hi', 3], [Infinity, 'test'], [NaN, null]]),
+  set: new Set<any>([1, 2, 3, +0, null, undefined]),
+  regexp: /hello-world/g,
+  instance: new Dummy(),
+  str: new String('string object instance'),
+  num: new Number(100),
+  object: {
+    'test long key': 'value',
+    emptyString: ''
+  }
+};
+
+// create some basic and deeply nested cyclic dependencies
+target.cyclic = target;
+target.map.set(target, target.set);
+target.set.add(target);
+target.map.set(target.array, target.instance);
+
+const data = serialism.serialize(target);
+
+const result = serialism.deserialize(result);
+
+assert.deepEqual(target, result); // true
+```
+
+#### TypeScript
 
 ```typescript
 import { assert } from 'chai';
@@ -85,7 +132,7 @@ assert.instanceOf(
 ); // true
 ```
 
-### JavaScript
+#### JavaScript
 
 ```js
 const Serialism = require('serialism').Serialism;
@@ -107,49 +154,6 @@ console.log(Buffer.isBuffer(data)); // true;
 const deserialized = serialism.deserialize(data); // deserialize the data
 
 assert.deepEqual(data, deserialized); // true, the clone is equal
-```
-
-### Raw interface (no class deserialization)
-
-This allows you to serialize and deserialize any JavaScript value, without the revival of classes and the processing of global symbols.
-
-This interface is much faster because it will not traverse the object graph in JavaScript to entomb and revive values.
-
-In this case, any class instances supplied will be serialized as plain objects.
-
-```typescript
-import { serializeNative, deserializeNative } from 'serialism';
-import { assert } from 'chai';
-
-const target: any = {
-  undef: undefined,
-  nullVal: null,
-  negativeZero: -0,
-  test: 'hello world',
-  array: [1, 2, 3, 'test', Math.PI, new Date()],
-  map: new Map<any, any>([['hi', 3], [Infinity, 'test'], [NaN, null]]),
-  set: new Set<any>([1, 2, 3, +0, null, undefined]),
-  regexp: /hello-world/g,
-  instance: new Dummy(),
-  str: new String('string object instance'),
-  num: new Number(100),
-  object: {
-    'test long key': 'value',
-    emptyString: ''
-  }
-};
-
-// create some basic and deeply nested cyclic dependencies
-target.cyclic = target;
-target.map.set(target, target.set);
-target.set.add(target);
-target.map.set(target.array, target.instance);
-
-const data = serializeNative(target);
-
-const result = deserializeNative(result);
-
-assert.deepEqual(target, result); // true
 ```
 
 ### Contributions

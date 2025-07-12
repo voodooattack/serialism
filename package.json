@@ -1,10 +1,10 @@
 {
   "name": "serialism",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Serialize complex JavaScript objects and ESM classes with circular dependencies, natively.",
-  "main": "dist/cjs/serialism.js",
-  "module": "dist/esm/serialism.js",
-  "types": "dist/esm/serialism.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
   "files": [
     "README.md",
     "CHANGELOG.md",
@@ -29,8 +29,8 @@
   },
   "scripts": {
     "clean": "rimraf dist/ build/",
-    "prepublishOnly": "npm run rebuild && npm run typedoc && npm run test",
     "typedoc": "typedoc --out docs --theme default src/serialism.ts --excludeExternals --excludeNotDocumented --excludePrivate --excludeProtected --name serialism --readme README.md --tsconfig tsconfig.json",
+    "prepublishOnly": "npm run rebuild && npm run typedoc && npm run test",
     "lint": "tslint -c tslint.json --project .",
     "pretest": "npm run build",
     "test": "npm run rebuild:debug && nyc mocha",
@@ -79,7 +79,6 @@
     "nan": "^2.22.2"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
     "@semantic-release/changelog": "^6.0.3",
@@ -98,7 +97,6 @@
     "nyc": "^17.1.0",
     "rimraf": "^6.0.1",
     "rollup": "^4.45.0",
-    "rollup-plugin-multi-input": "^1.5.0",
     "semantic-release": "^24.2.6",
     "source-map-support": "^0.5.21",
     "tslint": "^5.20.1",
@@ -120,6 +118,7 @@
       "source-map-support/register"
     ],
     "exclude": [
+      "**/*.spec.ts",
       "**/*.spec.ts",
       "**/*.d.ts"
     ],
