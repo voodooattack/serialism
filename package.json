@@ -1,14 +1,16 @@
 {
   "name": "serialism",
-  "version": "1.0.2",
-  "description": "Serialize complex JavaScript objects or ES6 classes with circular dependencies natively.",
-  "main": "dist/serialism.js",
-  "types": "dist/serialism.d.ts",
+  "version": "1.1.0",
+  "description": "Serialize complex JavaScript objects and ESM classes with circular dependencies, natively.",
+  "main": "dist/cjs/serialism.js",
+  "module": "dist/esm/serialism.js",
+  "types": "dist/esm/serialism.d.ts",
   "files": [
     "README.md",
     "CHANGELOG.md",
     "binding.gyp",
     "dist",
+    "docs",
     "src/native.cxx"
   ],
   "readme": "README.md",
@@ -19,7 +21,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">= 8.13.0"
+    "node": ">= 20.19.3"
   },
   "repository": {
     "type": "git",
@@ -27,18 +29,21 @@
   },
   "scripts": {
     "clean": "rimraf dist/ build/",
-    "prepublish": "npm run build && npm run typedoc && npm run test",
-    "typedoc": "typedoc --out docs --target es6 --theme minimal --mode file src",
+    "prepublishOnly": "npm run rebuild && npm run typedoc && npm run test",
+    "typedoc": "typedoc --out docs --theme default src/serialism.ts --excludeExternals --excludeNotDocumented --excludePrivate --excludeProtected --name serialism --readme README.md --tsconfig tsconfig.json",
     "lint": "tslint -c tslint.json --project .",
-    "pretest": "npm run clean && npm run lint && npm run build",
-    "test": "nyc mocha --expose-gc --ui mocha-typescript test/test_**.ts",
+    "pretest": "npm run build",
+    "test": "npm run rebuild:debug && nyc mocha",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "watch": "mocha-typescript-watch",
-    "prepare": "npm run lint && tsc",
-    "install": "node-gyp configure rebuild",
-    "build": "tsc && node-gyp configure rebuild",
-    "debug-build": "tsc && node-gyp --debug configure rebuild",
+    "prepare": "npm run lint && npm run bundle; npm run compile_commands",
+    "install": "node-gyp --release configure build",
+    "bundle": "rollup -c rollup.config.mjs",
+    "build": "npm run bundle && node-gyp --release configure build",
+    "build:debug": "npm run bundle && node-gyp --debug configure build",
+    "rebuild": "npm run bundle && node-gyp --release configure rebuild; npm run compile_commands",
+    "rebuild:debug": "npm run bundle && node-gyp --debug configure rebuild; npm run compile_commands",
     "commit": "npm run lint && npm run test && npx git-cz",
+    "compile_commands": "node-gyp --debug configure -- -f compile_commands_json",
     "semantic-release": "semantic-release"
   },
   "keywords": [
@@ -69,32 +74,37 @@
   ],
   "gypfile": true,
   "dependencies": {
-    "bindings": "^1.3.0",
-    "nan": "^2.11.1"
+    "async": "^3.2.4",
+    "bindings": "^1.5.0",
+    "nan": "^2.22.2"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^3.0.1",
-    "@semantic-release/commit-analyzer": "^6.1.0",
-    "@semantic-release/git": "^7.0.5",
-    "@semantic-release/npm": "^5.1.1",
-    "@semantic-release/release-notes-generator": "^7.1.4",
-    "@types/bindings": "^1.3.0",
-    "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^10.12.10",
-    "chai": "^4.2.0",
-    "coveralls": "^3.0.2",
-    "cz-conventional-changelog": "^2.1.0",
-    "mocha": "^5.2.0",
-    "mocha-typescript": "^1.1.17",
-    "nyc": "^13.1.0",
-    "rimraf": "^2.6.2",
-    "semantic-release": "^15.12.1",
-    "source-map-support": "^0.5.9",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
-    "typedoc": "^0.15.3",
-    "typescript": "^3.1.6"
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.0.3",
+    "@types/bindings": "^1.5.5",
+    "@types/chai": "^5.2.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.0.10",
+    "chai": "^5.2.0",
+    "coveralls": "^3.1.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "mocha": "11.7.1",
+    "nyc": "^17.1.0",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.45.0",
+    "rollup-plugin-multi-input": "^1.5.0",
+    "semantic-release": "^24.2.6",
+    "source-map-support": "^0.5.21",
+    "tslint": "^5.20.1",
+    "tsx": "^4.20.3",
+    "typedoc": "^0.28.7",
+    "typescript": "^5.8.3"
   },
   "config": {
     "commitizen": {
@@ -103,16 +113,14 @@
   },
   "nyc": {
     "check-coverage": true,
-    "per-file": true,
     "include": [
-      "src/**.ts"
+      "src/**/*.ts"
     ],
     "require": [
-      "source-map-support/register",
-      "ts-node/register/transpile-only"
+      "source-map-support/register"
     ],
     "exclude": [
-      "test/**.ts",
+      "**/*.spec.ts",
       "**/*.d.ts"
     ],
     "reporter": [
@@ -120,7 +128,6 @@
       "text-summary"
     ],
     "extension": [
-      ".js",
       ".ts"
     ],
     "watermarks": {

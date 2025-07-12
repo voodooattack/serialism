@@ -1,4 +1,4 @@
-import { deserializeNative, serializeNative } from './native';
+import { deserializeNative, serializeNative } from './native.js';
 
 export { serializeNative, deserializeNative };
 
@@ -106,13 +106,19 @@ export class Serialism {
       encoded = ['@serialism:type', type.name, null];
       known.set(value, encoded);
       encoded[2] = Object.entries(value).map(
-        ([key, val]) => [key, this.entomb(val, known)]
-      );
+        ([key, val]) => [this.entomb(key, known), this.entomb(val, known)]
+      ).concat(Object.getOwnPropertySymbols(value).map(sym => {
+        const key = Symbol.keyFor(sym);
+        if (key) {
+          return [`@serialism:sym:${key}`, this.entomb(value[sym], known)];
+        }
+        return [sym, this.entomb(value[sym], known)];
+      }));
     } else {
       encoded = Object.assign({}, value);
       known.set(value, encoded);
       for (const [key, val] of Object.entries(encoded)) {
-        encoded[key] = this.entomb(val, known);
+        encoded[this.entomb(key)] = this.entomb(val, known);
       }
 
       for (const sym of Object.getOwnPropertySymbols(value)) {

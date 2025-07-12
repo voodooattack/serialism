@@ -1,16 +1,17 @@
 #include <nan.h>
-#include <iostream>
 
 NAN_METHOD(serializeNative)
 {
-  v8::Isolate *isolate = v8::Isolate::GetCurrent();
-  v8::HandleScope scope(isolate);
+  using namespace v8;
+  Local<Context> context = Nan::GetCurrentContext();
+  Isolate* isolate = context->GetIsolate();
+  Nan::HandleScope scope;
 
-  v8::ValueSerializer serializer(isolate);
+  ValueSerializer serializer(isolate);
 
   serializer.WriteHeader();
 
-  if (serializer.WriteValue(isolate->GetEnteredContext(), info[0])
+  if (serializer.WriteValue(context, info[0])
           .FromMaybe(false))
   {
     auto data = serializer.Release();
@@ -30,8 +31,10 @@ NAN_METHOD(serializeNative)
 
 NAN_METHOD(deserializeNative)
 {
-  v8::Isolate *isolate = v8::Isolate::GetCurrent();
-  v8::HandleScope scope(isolate);
+  using namespace v8;
+  Local<Context> context = Nan::GetCurrentContext();
+  Isolate* isolate = context->GetIsolate();
+  Nan::HandleScope scope;
 
   if (!node::Buffer::HasInstance(info[0]))
   {
@@ -39,19 +42,19 @@ NAN_METHOD(deserializeNative)
     return;
   }
 
-  v8::ValueDeserializer deserializer(
+  ValueDeserializer deserializer(
       isolate,
       (uint8_t *)node::Buffer::Data(info[0]),
       node::Buffer::Length(info[0]));
 
-  if (!deserializer.ReadHeader(isolate->GetEnteredContext()).FromMaybe(false))
+  if (!deserializer.ReadHeader(context).FromMaybe(false))
   {
     Nan::ThrowError("invalid buffer");
     return;
   }
 
-  v8::Local<v8::Value> value =
-      deserializer.ReadValue(isolate->GetEnteredContext()).ToLocalChecked();
+  Local<Value> value =
+      deserializer.ReadValue(context).ToLocalChecked();
 
   info.GetReturnValue().Set(value);
 }

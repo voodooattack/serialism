@@ -1,0 +1,21 @@
+# .mocharc.yaml
+# Configuration file for Mocha test framework
+
+require:
+  - source-map-support/register
+
+node-option: 
+  - import=tsx
+  - expose-gc
+
+extension:
+  - ts
+  - js
+
+spec:
+  - test/*.spec.ts
+  - test/**/*.spec.ts
+
+timeout: 5000
+
+recursive: true

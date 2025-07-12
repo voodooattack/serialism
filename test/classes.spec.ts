@@ -1,19 +1,24 @@
 import { assert } from 'chai';
-import { suite, test } from 'mocha-typescript';
-import { Serialism } from '../src/serialism';
+import { Serialism } from '..';
+import * as util from 'util';
 
 const mySymbol = Symbol.for('mySymbol');
 
 class TestDummy {
   public [mySymbol] = 'hello world';
-  constructor(public data: string) {}
+  public data: string;
+  constructor(data: string) {
+    this.data = data;
+  }
 }
 
 class TestDummy2 extends TestDummy {
   public readonly instance: TestDummy = this;
+  public data2: string;
 
-  constructor(public data2: string) {
-    super(data2);
+  constructor(data: string) {
+    super(data);
+    this.data2 = data;
   }
 
   get data3() {
@@ -25,28 +30,23 @@ class TestDummy2 extends TestDummy {
   }
 }
 
-@suite
-export class TestClasses {
-  @test
-  public 'class is exported'() {
+describe('TestClasses', () => {
+  it('class is exported', () => {
     assert.isFunction(Serialism);
-  }
+  });
 
-  @test
-  public 'default constructor works'() {
+  it('default constructor works', () => {
     const serializer = new Serialism();
     assert.instanceOf(serializer, Serialism);
-  }
+  });
 
-  @test
-  public 'can (de)serialize basic values'() {
+  it('can (de)serialize basic values', () => {
     const serializer = new Serialism();
     const data = serializer.serialize('hello');
     assert.equal(serializer.deserialize(data), 'hello');
-  }
+  });
 
-  @test
-  public 'custom classes work'() {
+  it('custom classes work', () => {
     const serializer = new Serialism([TestDummy, TestDummy2]);
     const sharedInstance = new TestDummy2('value');
     const target = {
@@ -69,10 +69,9 @@ export class TestClasses {
     );
     target.sharedInstance.data3 = 'different';
     assert.notEqual(target.sharedInstance.data3, result.sharedInstance.data3);
-  }
+  });
 
-  @test
-  public 'serialize class instance'() {
+  it('serialize class instance', () => {
     const serializer = new Serialism([TestDummy, TestDummy2]);
     const target = new TestDummy2('value');
     const data = serializer.serialize(target);
@@ -81,10 +80,9 @@ export class TestClasses {
     assert.instanceOf(result, TestDummy2);
     assert.deepStrictEqual(target, result);
     assert.strictEqual(result.instance, result);
-  }
+  });
 
-  @test
-  public 'global symbols work'() {
+  it('global symbols work', () => {
     const serializer = new Serialism();
     const sym = Symbol.for('test');
     const target = {
@@ -95,15 +93,14 @@ export class TestClasses {
     const result = serializer.deserialize(data);
     assert.deepStrictEqual(target, result);
     assert.strictEqual(target[sym], result[sym]);
-  }
+  });
 
-  @test
-  public 'local symbols do not work'() {
+  it('local symbols do not work', () => {
     const serializer = new Serialism();
     const sym = Symbol();
     const target = { [sym]: 'hello symbols' };
     const data = serializer.serialize(target);
     const result = serializer.deserialize(data);
     assert.isUndefined(result[sym]);
-  }
-}
+  });
+});

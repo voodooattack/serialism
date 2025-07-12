@@ -1,4 +1,4 @@
-import bindings = require('bindings');
+import bindings from 'bindings';
 
 /**
  * @ignore

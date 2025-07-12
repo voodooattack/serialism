@@ -6,6 +6,7 @@ node_modules/
 .nyc_output/
 .vscode/
 .idea/
+.cache/
 
 npm-debug.log
 
