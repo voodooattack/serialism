@@ -70,6 +70,9 @@ import { Serialism } from 'serialism';
 import { Class1 } from '...';
 
 const serialism = new Serialism();
+
+serialism.register(Class1);
+
 const target: any = {
   undef: undefined,
   nullVal: null,
@@ -85,7 +88,8 @@ const target: any = {
   object: {
     'test long key': 'value',
     emptyString: ''
-  }
+  },
+  myClass: new Class1()
 };
 
 // create some basic and deeply nested cyclic dependencies
@@ -110,7 +114,7 @@ import { Class1 } from '...';
 
 const serialism = new Serialism();
 // or if you plan on serializing a value containing ES6 classes:
-// const serialism = new Serialism([Class1, Class2, ...]);
+// const serialism = new Serialism().register(Class1, Class2, ...);
 
 // serialize an object, an array, a regex, a primitive value, anything works except local symbols
 const myArray = [1, 2, NaN, /my-regex-here/g, new Class1('ho there!')];
@@ -137,6 +141,8 @@ assert.instanceOf(
 ```js
 const Serialism = require('serialism').Serialism;
 const Class1 = require('...');
+
+const serialism = new Serialism().register(Class1);
 
 // serialize an object, an array, a regex, a set, a map, a primitive value, anything works except local symbols
 const data = serialism.serialize([
