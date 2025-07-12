@@ -1,6 +1,6 @@
 {
   "name": "serialism",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Serialize complex JavaScript objects and ESM classes with circular dependencies, natively.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
