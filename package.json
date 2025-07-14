@@ -29,7 +29,7 @@
   },
   "scripts": {
     "clean": "rimraf dist/ build/",
-    "docs:generate": "typedoc --out docs --theme default src/*.ts --excludeExternals --excludeNotDocumented --excludePrivate --excludeProtected --name serialism --readme README.md --tsconfig tsconfig.json",
+    "docs:generate": "typedoc --plugin typedoc-plugin-missing-exports --out docs --placeInternalsInOwningModule src/**/*.ts --name serialism --readme README.md --tsconfig tsconfig.json",
     "docs:deploy": "npm run docs:generate && gh-pages -d docs",
     "prepublishOnly": "npm run rebuild && npm run docs:generate && npm run test",
     "postpublish": "npm run docs:deploy",
@@ -111,6 +111,7 @@
     "source-map-support": "^0.5.21",
     "tsx": "^4.20.3",
     "typedoc": "^0.28.7",
+    "typedoc-plugin-missing-exports": "^4.0.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.36.0"
   },

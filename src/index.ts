@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import bindings from 'bindings';
+import type { Buffer } from 'node:buffer';
 
 /**
  * Serialism is a library for serializing and deserializing JavaScript values.
@@ -54,6 +55,7 @@ declare class Serialism {
   public register(...classes: (new (...args: never[]) => unknown)[]): this;
 }
 
+/** @ignore */
 const SerialismInstance = bindings('serialism').Serialism as typeof Serialism;
 
 export { SerialismInstance as Serialism };
