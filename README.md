@@ -1,6 +1,6 @@
 # serialism
 
-Serialize complex JavaScript objects or ES6 classes with circular dependencies natively.
+Serialize complex JavaScript objects and ES classes with circular dependencies natively.
 
 [![npm](https://img.shields.io/npm/v/serialism.svg)](https://www.npmjs.com/package/serialism)
 [![GitHub license](https://img.shields.io/github/license/voodooattack/serialism.svg)](https://github.com/voodooattack/serialism/blob/master/LICENSE)
@@ -56,39 +56,66 @@ Use `npm install serialism` to install the npm package.
 
 ### Simple Example
 
-#### Raw interface (no class deserialization)
+```typescript
+const buffer = new Serialism().serialize([1,2,3])
+const deserialized = new Serialism().deserialize(buffer); 
+console.log(deserialized) // [1, 2, 3]
+```
 
-This allows you to serialize and deserialize any JavaScript value, without the revival of classes and the processing of global symbols.
+#### So, why would I use this over `JSON.stringify`?
 
-This interface is much faster because it will not traverse the object graph in JavaScript to entomb and revive values.
+The biggest difference about serialism-aside from extended type support—is that it preserves an object's graph, i.e if you do this:
+```js
+const array = [1, 2, 3]
+const buffer = serialism.serialize({arr1: array, arr2: array})
+```
+If you save the buffer and deserialize it later on, then—unlike `JSON`—the following holds true:
+```js
+const {arr1, arr2} = serialism.deserialize(buffer)
+// Check for strict equality
+console.log(arr1 === arr2); // true
+```
 
-In this case, any class instances supplied will be serialized as plain objects.
+Another tangential benefit is compactness. Serialism returns a node `Buffer` object, containing the object graph in a compact binary format.
 
+Duplicate objects (i.e objects that exhibit strict equality) are stored using references, so no single value is ever stored twice.
+
+The binary format is also useful if you wish to send it to a Worker or over an IPC mechanism while preserving its structure.
+
+### More Complex Example
 ```typescript
 import { assert } from 'chai';
 import { Serialism } from 'serialism';
-import { Class1 } from '...';
+import { Class1 } from './Class1';
 
 const serialism = new Serialism();
 
+// Register a class.
 serialism.register(Class1);
 
-const target: any = {
+const sharedArray = ['value'];
+
+const target = {
   undef: undefined,
   nullVal: null,
   negativeZero: -0,
   test: 'hello world',
   array: [1, 2, 3, 'test', Math.PI, new Date()],
+  buffer: new Uint8Array([1, 2, 3]),
+  arrayBuffer: new ArrayBuffer(8),
+  arrayBufferView: new Uint8Array([1, 2, 3]),
   map: new Map<any, any>([['hi', 3], [Infinity, 'test'], [NaN, null]]),
   set: new Set<any>([1, 2, 3, +0, null, undefined]),
   regexp: /hello-world/g,
-  instance: new Dummy(),
+  instance: new Class1(),
   str: new String('string object instance'),
   num: new Number(100),
   object: {
     'test long key': 'value',
-    emptyString: ''
+    emptyString: '',
+    sharedArray,
   },
+  sharedArray,
   myClass: new Class1()
 };
 
@@ -99,48 +126,20 @@ target.set.add(target);
 target.map.set(target.array, target.instance);
 
 const data = serialism.serialize(target);
-
-const result = serialism.deserialize(result);
+const result = serialism.deserialize<typeof target>(result);
 
 assert.deepEqual(target, result); // true
-```
-
-#### TypeScript
-
-```typescript
-import { assert } from 'chai';
-import { Serialism } from 'serialism';
-import { Class1 } from '...';
-
-const serialism = new Serialism();
-// or if you plan on serializing a value containing ES6 classes:
-// const serialism = new Serialism().register(Class1, Class2, ...);
-
-// serialize an object, an array, a regex, a primitive value, anything works except local symbols
-const myArray = [1, 2, NaN, /my-regex-here/g, new Class1('ho there!')];
-
-// cyclic and self-references will work
-myArray.push(myArray);
-
-const data = serialism.serialize(myArray);
-
-console.log(Buffer.isBuffer(data)); // true;
-
-const deserialized = serialism.deserialize<any>(data); // deserialize the data
-
-assert.deepEqual(data, deserialized); // true, the clone is equal
-
-assert.instanceOf(
-  serialism.deserialize<Class1>(serialism.serialize(new Class1("I'm a class"))),
-  Class1
-); // true
+assert.strictEquals(result.cyclic, result.map.get(result.cyclic)) // true
+assert.strictEquals(result.cyclic, result.map.get(result.cyclic)) // true
+assert.strictEquals(result.cyclic, result.map.get(result.array)) // true
+assert.strictEquals(result.sharedArray, result.object.sharedArray) // true
 ```
 
 #### JavaScript
 
 ```js
 const Serialism = require('serialism').Serialism;
-const Class1 = require('...');
+const Class1 = require('./Class1');
 
 const serialism = new Serialism().register(Class1);
 
@@ -159,8 +158,56 @@ console.log(Buffer.isBuffer(data)); // true;
 
 const deserialized = serialism.deserialize(data); // deserialize the data
 
-assert.deepEqual(data, deserialized); // true, the clone is equal
+assert.deepEqual(data, deserialized); // true
 ```
+
+### Error Handling
+
+- All classes must be registered to be proccessed. Serialism will throw if you attempt to serialize an unknown class.
+```typescript
+import {assert} from 'chai';
+import {Serialism} from 'serialism';
+
+const serializer = new Serialism();
+
+assert.throws(() => serializer.serialize(
+    new class MyUnregisteredClass {}
+  ), 
+  "No registered class found for MyUnregisteredClass"
+);
+
+```
+- Serialism will throw if you attempt to deserialize an unknown class.
+```typescript
+import {assert} from 'chai';
+import {Serialism} from 'serialism';
+
+class RegisteredClass {}
+
+serializer.register(RegisteredClass);
+
+const result = serializer.serialize(new RegisteredClass());
+
+assert.throws(
+  // A new deserializer instance does not know the class.
+  () => new Serialism().deserialize(result), 
+  "No registered class found for: RegisteredClass"
+);
+```
+
+##### Registering Classes
+- You can't register two different classes with the same name.
+```typescript
+import {assert} from 'chai';
+import {Serialism} from 'serialism';
+
+assert.throws(() => {
+  const serializer2 = new Serialism();
+  serializer2.register(class RegisteredClass {});
+  serializer2.register(class RegisteredClass {});
+}, "A different class with the name 'RegisteredClass' is already registered.");
+```
+
 
 ### Contributions
 
