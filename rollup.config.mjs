@@ -1,26 +1,23 @@
-import { defineConfig } from "rollup";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
+import { defineConfig } from 'rollup';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
 
 const createConfig = (output) => {
   return defineConfig({
-    input: "./src/index.ts",
+    input: './src/index.ts',
     output: {
-      exports: "named",
+      exports: 'named',
       ...output,
       preserveModules: true,
       sourcemap: true,
     },
-    external: [
-      "bindings",
-      "nan",
-    ],
+    external: ['bindings', 'nan'],
     plugins: [
       nodeResolve(),
       typescript({
-        tsconfig: "./tsconfig.json",
+        tsconfig: './tsconfig.json',
         outDir: output.dir,
-        rootDir: "./src",
+        rootDir: './src',
         declaration: true,
       }),
     ],
@@ -30,10 +27,10 @@ const createConfig = (output) => {
 export default [
   createConfig({
     dir: `./dist/esm`,
-    format: "esm",
+    format: 'esm',
   }),
   createConfig({
     dir: `./dist/cjs`,
-    format: "cjs",
+    format: 'cjs',
   }),
 ];

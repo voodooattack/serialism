@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import bindings from 'bindings';
 
 /**
@@ -30,7 +31,7 @@ declare class Serialism {
    * @throws Throws an error if the buffer is incompatible or malformed.
    * @throws Throws an error if a non-registered class is encountered.
    */
-  public deserialize<T = any>(buffer: Buffer): T;
+  public deserialize<T>(buffer: Buffer): T;
 
   /**
    * Register class constructors for serialization/deserialization.
@@ -50,7 +51,7 @@ declare class Serialism {
    * console.log(obj); // MyClass { name: 'example' }
    * ```
    */
-  public register(...classes: Array<new (...args: any[]) => any>): this;
+  public register(...classes: (new (...args: never[]) => unknown)[]): this;
 }
 
 const SerialismInstance = bindings('serialism').Serialism as typeof Serialism;
