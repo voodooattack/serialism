@@ -1,4 +1,5 @@
 #include "v8-container.h"
+#include "v8-context.h"
 #include "v8-local-handle.h"
 #include "v8-template.h"
 #include <nan.h>
@@ -13,6 +14,9 @@
 using namespace v8;
 using namespace node;
 
+/**
+ * Internal fields used by the Serialism instance.
+ */
 enum InternalFields : uint32_t {
   kSerialismInstance = 0, // Instance of Serialism
   kKnownClasses,          // Map for storing registered classes
@@ -379,8 +383,8 @@ public:
     const Local<Array> array = _registeredClasses->AsArray();
     for (unsigned int i = 0; i < _registeredClasses->Size(); ++i) {
       Local<String> name = array->Get(isolate->GetCurrentContext(), i * 2)
-                                 .ToLocalChecked()
-                                 .As<String>();
+                               .ToLocalChecked()
+                               .As<String>();
       Local<Function> func = array->Get(isolate->GetCurrentContext(), i * 2 + 1)
                                  .ToLocalChecked()
                                  .As<Function>();
@@ -646,13 +650,38 @@ public:
 };
 } // namespace delegate
 
+bool checkIsSerialism(Local<Context> context, Local<Object> thisObject) {
+  auto marker =
+      thisObject->GetInternalField(InternalFields::kSerialismInstance);
+  if (marker.IsEmpty() || !marker->IsValue() ||
+      !marker.As<String>()->StrictEquals(
+          Nan::New("SerialismInstance").ToLocalChecked())) {
+    // If the marker is not set or does not match, we throw an error.
+#ifdef SERIALISM_DEBUG
+    std::cerr << "[Serialism] This object is not an instance of Serialism."
+              << std::endl;
+#endif
+    Isolate *isolate = context->GetIsolate();
+    isolate->ThrowError(
+        "This object is not an instance of Serialism. Please create a new "
+        "instance of Serialism before using its methods.");
+    return false;
+  }
+  return true;
+}
+
 /**
  * Register a javascript class for serialization/deserialization.
  */
 NAN_METHOD(registerClass) {
   Local<Context> ctx = Nan::GetCurrentContext();
   Isolate *isolate = ctx->GetIsolate();
+  Local<Context> context = isolate->GetCurrentContext();
   HandleScope scope(isolate);
+
+  if (!checkIsSerialism(context, info.This())) {
+    return; // If the object is not a Serialism instance, we throw an error.
+  }
 
   auto count = info.Length();
 
@@ -691,7 +720,7 @@ NAN_METHOD(registerClass) {
 
     if (arg->IsProxy()) {
       isolate->ThrowError("Cannot register a proxy as a class");
-      return;    
+      return;
     }
 
     if (classes->Has(ctx, name).FromJust()) {
@@ -727,6 +756,10 @@ NAN_METHOD(serializeNative) {
   Local<Context> context = Nan::GetCurrentContext();
   Isolate *isolate = context->GetIsolate();
   Nan::HandleScope scope;
+
+  if (!checkIsSerialism(context, info.This())) {
+    return; // If the object is not a Serialism instance, we throw an error.
+  }
 
   if (info.Length() < 1) {
     isolate->ThrowError("Argument is required");
@@ -770,7 +803,12 @@ NAN_METHOD(serializeNative) {
 
 NAN_METHOD(deserializeNative) {
   Isolate *isolate = Nan::GetCurrentContext()->GetIsolate();
+  Local<Context> context = Nan::GetCurrentContext();
   Nan::HandleScope scope;
+
+  if (!checkIsSerialism(context, info.This())) {
+    return; // If the object is not a Serialism instance, we throw an error.
+  }
 
   if (!node::Buffer::HasInstance(info[0])) {
     isolate->ThrowError("Argument must be a Buffer instance");
