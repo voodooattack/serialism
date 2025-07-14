@@ -45,14 +45,14 @@ describe("Basic functionality", function () {
     assert.instanceOf(serializer, Serialism);
   });
 
-  it('doesn\'t allow SharedArrayBuffer', function () {
+  it("doesn't allow SharedArrayBuffer", function () {
     const serializer = new Serialism();
     expect(() => serializer.serialize(new SharedArrayBuffer())).to.throw(
       "<SharedArrayBuffer> could not be cloned."
     );
   });
 
-  it('can serialize and deserialize a native error object', function () {
+  it("can serialize and deserialize a native error object", function () {
     const serializer = new Serialism().register(TypeError);
     const error = new TypeError("Test error");
     const data = serializer.serialize(error);
@@ -64,12 +64,10 @@ describe("Basic functionality", function () {
     assert.strictEqual(result.stack, error.stack);
   });
 
-  it('cannot serialize bare symbols', function () {
+  it("cannot serialize bare symbols", function () {
     const serializer = new Serialism();
     const sym = Symbol.for("test");
-    expect(() => serializer.serialize(sym)).to.throw(
-      "Data clone error"
-    );
+    expect(() => serializer.serialize(sym)).to.throw("Data clone error");
   });
 
   it("can (de)serialize basic values", function () {
@@ -79,11 +77,20 @@ describe("Basic functionality", function () {
   });
 
   it("can handle a complex graph w/custom classes", function () {
-    const serializer = new Serialism().register(TestDummy, TestDummy2, TestDummy3);
+    const serializer = new Serialism().register(
+      TestDummy,
+      TestDummy2,
+      TestDummy3
+    );
     const sharedInstance = new TestDummy2("value");
     const dummy3 = new TestDummy3("test");
     dummy3.data4 = "xxxx";
     dummy3.instance = sharedInstance;
+    const sharedArray = [
+      sharedInstance,
+      new TestDummy("test"),
+      new TestDummy2("test2"),
+    ];
     const target = {
       test: new TestDummy("hello"),
       dummy3,
@@ -92,7 +99,9 @@ describe("Basic functionality", function () {
       set: new Set([sharedInstance]),
       buffer: new Uint8Array([1, 2, 3]),
       arrayBuffer: new ArrayBuffer(8),
-      arrayBufferView: new Uint8Array([1, 2, 3]),   
+      arrayBufferView: new DataView(
+        new Uint8Array([1, 2, 3]).buffer
+      ),
       array: [sharedInstance, 1, 2, 3, "test", Math.PI, new Date()] as [
         TestDummy2,
         number,
@@ -102,6 +111,8 @@ describe("Basic functionality", function () {
         number,
         Date
       ],
+      sharedArray,
+      sharedArrayNested: {sharedArray},
       regexp: /hello-world/g,
     };
     const data = serializer.serialize(target);
@@ -116,6 +127,7 @@ describe("Basic functionality", function () {
     );
     assert.strictEqual(result.sharedInstance.instance, result.sharedInstance);
     assert.strictEqual(result.sharedInstance, result.array[0].instance);
+    assert.strictEqual(result.sharedArray, result.sharedArrayNested.sharedArray);
     target.sharedInstance.data3 = "different";
     assert.notEqual(target.sharedInstance.data3, result.sharedInstance.data3);
   });
@@ -147,9 +159,9 @@ describe("Basic functionality", function () {
   it("private symbols do not work but global ones do", function () {
     const serializer = new Serialism();
     const localSym = Symbol();
-    expect(() => serializer.serialize({ [localSym]: "private symbol" })).to.throw(
-      "Failed to serialize"
-    );
+    expect(() =>
+      serializer.serialize({ [localSym]: "private symbol" })
+    ).to.throw("Failed to serialize");
     expect(() => serializer.serialize({ sym: localSym })).to.throw(
       "Failed to serialize"
     );
@@ -157,18 +169,20 @@ describe("Basic functionality", function () {
     expect(() => serializer.serialize(targetGlobal)).to.not.throw();
   });
 
-  it('does not serialize unknown classes', function () {
+  it("does not serialize unknown classes", function () {
     const serializer = new Serialism();
-    const target = new class A {v = "test";};
+    const target = new (class A {
+      v = "test";
+    })();
     expect(() => serializer.serialize(target)).to.throw(
       "No registered class found for " + target.constructor.name
     );
   });
 
-  it('does not deserialize unknown classes', function () {
+  it("does not deserialize unknown classes", function () {
     const serializer = new Serialism().register(TestDummy, TestDummy2);
     const result = serializer.serialize(new TestDummy2("test"));
-    const deserializer = new Serialism();    
+    const deserializer = new Serialism();
     expect(() => deserializer.deserialize<TestDummy2>(result)).to.throw(
       "No registered class found for: TestDummy2"
     );
@@ -183,12 +197,16 @@ describe("Basic functionality", function () {
 
   it("can register multiple classes at once", function () {
     const serializer = new Serialism();
-    expect(() => serializer.register(TestDummy, TestDummy2, class A {})).to.not.throw();
+    expect(() =>
+      serializer.register(TestDummy, TestDummy2, class A {})
+    ).to.not.throw();
   });
 
-  it('fails if two classes with the same name are registered', function () {
+  it("fails if two classes with the same name are registered", function () {
     const serializer = new Serialism();
-    expect(() => serializer.register(TestDummy, TestDummy2, class TestDummy {})).to.throw(
+    expect(() =>
+      serializer.register(TestDummy, TestDummy2, class TestDummy {})
+    ).to.throw(
       "A different class with the name 'TestDummy' is already registered"
     );
   });
