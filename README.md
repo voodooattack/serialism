@@ -64,7 +64,7 @@ console.log(deserialized) // [1, 2, 3]
 
 #### So, why would I use this over `JSON.stringify`?
 
-The biggest difference about serialism-aside from extended type support—is that it preserves an object's graph, i.e if you do this:
+The biggest difference about serialism—aside from extended type support—is that it preserves an object's graph, i.e if you do this:
 ```js
 const array = [1, 2, 3]
 const buffer = serialism.serialize({arr1: array, arr2: array})
@@ -195,7 +195,6 @@ assert.throws(
 );
 ```
 
-##### Registering Classes
 - You can't register two different classes with the same name.
 ```typescript
 import {assert} from 'chai';
@@ -208,7 +207,6 @@ assert.throws(() => {
 }, "A different class with the name 'RegisteredClass' is already registered.");
 ```
 
-
 ### Contributions
 
 All contributions and pull requests are welcome.
@@ -219,22 +217,22 @@ Note: Please commit your changes using `npm run commit` to trigger `conventional
 
 ### License (MIT)
 
-Copyright (c) 2018 Abdullah A. Hassan
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+> Copyright (c) 2018 Abdullah A. Hassan
+> 
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+> 
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+> 
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
